@@ -27,19 +27,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Run Tests and Build
+      - name: Install Maven dependencies
         working-directory: application
-        run: |
-          mvn test
-          mvn clean package -DskipTests
+        run: mvn install -DskipTests  
+
+      - name: Run Tests
+        working-directory: application
+        run: mvn test
+
+      - name: Build with Maven (compile and package JAR)
+        working-directory: application
+        run: mvn clean package -DskipTests
 
       - name: Get commit hash and date
         id: commit_info
