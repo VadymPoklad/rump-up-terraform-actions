@@ -46,14 +46,9 @@ jobs:
           echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo "BUILD_DATE=$(date '+%Y-%m-%d-%H%M%S')" >> $GITHUB_ENV
 
-      - name: Rename JAR with commit hash and date
-        working-directory: application
-        run: |
-          mv target/*.jar target/application-${{ env.BUILD_DATE }}-${{ env.COMMIT_HASH }}.jar
-
       - name: Save artifact
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v3
         with:
-          name: java-artifact
+          name: application-${{ env.BUILD_DATE }}-${{ env.COMMIT_HASH }}
           path: application/target/*.jar
