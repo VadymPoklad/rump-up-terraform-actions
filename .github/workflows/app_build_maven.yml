@@ -1,0 +1,49 @@
+name: Java Build and Test
+
+on:
+  push:
+    branches:
+      - '**'  
+    paths:
+      - 'application/**'  
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - 'application/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'  
+
+      - name: Run Tests
+        run: mvn test  
+
+      - name: Build with Maven (compile and package JAR)
+        run: mvn clean package -DskipTests  
+
+      - name: Get commit hash and date
+        id: commit_info
+        run: |
+          echo "COMMIT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo "BUILD_DATE=$(date '+%Y-%m-%d-%H%M%S')" >> $GITHUB_ENV
+
+      - name: Rename JAR with commit hash and date
+        run: |
+          mv target/*.jar target/application-${{ env.BUILD_DATE }}-${{ env.COMMIT_HASH }}.jar
+
+      - name: Save artifact
+        if: github.ref == 'refs/heads/main'  
+        uses: actions/upload-artifact@v3
+        with:
+          name: java-artifact
+          path: target/*.jar  
