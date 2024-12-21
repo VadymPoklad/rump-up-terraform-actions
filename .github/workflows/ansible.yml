@@ -61,6 +61,7 @@ jobs:
       - name: Run Ansible playbook to deploy
         working-directory: ansible
         run: |
+          ansible-inventory -i inventory/aws_ec2.yml --list
           ansible-playbook -i inventory/aws_ec2.yml playbooks/deploy.yaml
         env:
           DB_USER: ${{ env.DB_USER }}
