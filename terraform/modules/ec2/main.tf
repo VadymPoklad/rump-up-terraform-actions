@@ -40,7 +40,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   ingress {
-    cidr_blocks = ["0.0.0.0/0"]  
+    cidr_blocks = ["0.0.0.0/0"]
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -48,13 +48,12 @@ resource "aws_security_group" "ec2_sg" {
 }
 
 resource "aws_lb" "application_load_balancer" {
-  name               = "app-lb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups   = [aws_security_group.ec2_sg.id]
-  subnets            = var.public_subnet_ids
-  enable_deletion_protection = false
-
+  name                        = "app-lb"
+  internal                    = false
+  load_balancer_type          = "application"
+  security_groups             = [aws_security_group.ec2_sg.id]
+  subnets                     = var.public_subnet_ids
+  enable_deletion_protection  = false
   enable_cross_zone_load_balancing = true
 
   tags = {
@@ -105,14 +104,14 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
 }
 
 resource "aws_instance" "ec2_instances" {
-  count             = length(var.private_subnet_ids)
-  ami               = var.ami_id
-  instance_type     = var.instance_type
-  subnet_id         = element(var.private_subnet_ids, count.index)
+  count                  = length(var.private_subnet_ids)
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  subnet_id              = element(var.private_subnet_ids, count.index)
   associate_public_ip_address = false
-  key_name          = var.key_name
-  iam_instance_profile = aws_iam_instance_profile.ec2_ssm_profile.name
-  security_groups   = [aws_security_group.ec2_sg.name]
+  key_name               = var.key_name
+  iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
+  security_groups        = [aws_security_group.ec2_sg.name]
   tags = {
     Name = "ec2-instance-${count.index + 1}"
   }
