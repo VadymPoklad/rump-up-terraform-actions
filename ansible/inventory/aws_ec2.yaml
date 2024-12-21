@@ -2,9 +2,11 @@ plugin: amazon.aws.aws_ec2
 regions:
   - us-east-1
 filters:
-  tag:Name: ec2-instance-*
-keyed_groups:
-  - key: tags.Name
-    prefix: ec2-
+  "tag:Role": "WebServer"
 hostnames:
-  - dns-name
+  - "tag:Name"
+keyed_groups:
+  - key: "tag:Role"
+    prefix: "role_"
+ssm:
+  enabled: true
