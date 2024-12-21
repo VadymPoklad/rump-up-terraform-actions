@@ -128,6 +128,7 @@ resource "aws_instance" "ec2_instances" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]  
   tags = {
     Name = "ec2-instance-${count.index + 1}"
+    Role = "WebServer"
   }
 
   user_data = <<-EOF
