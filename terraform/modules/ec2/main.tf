@@ -125,7 +125,7 @@ resource "aws_instance" "ec2_instances" {
   associate_public_ip_address = false
   key_name               = var.key_name
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
-  security_groups        = [aws_security_group.ec2_sg.name]  
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]  
   tags = {
     Name = "ec2-instance-${count.index + 1}"
   }
