@@ -47,6 +47,10 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   depends_on = [aws_iam_role.ec2_ssm_role]
+
+  tags = {
+    Name = "ec2-ssm-sg"
+  }
 }
 
 resource "aws_lb" "application_load_balancer" {
