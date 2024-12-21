@@ -23,7 +23,7 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm_policy" {
 resource "aws_security_group" "ec2_sg" {
   name        = "ec2-ssm-sg"
   description = "Allow traffic for EC2 instances managed by SSM"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc_id 
 
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -40,11 +40,13 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   ingress {
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"]  
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
   }
+
+  depends_on = [aws_iam_role.ec2_ssm_role]
 }
 
 resource "aws_lb" "application_load_balancer" {
@@ -59,6 +61,8 @@ resource "aws_lb" "application_load_balancer" {
   tags = {
     Name = "App-Load-Balancer"
   }
+
+  depends_on = [aws_security_group.ec2_sg]
 }
 
 resource "aws_lb_target_group" "target_group" {
@@ -79,6 +83,8 @@ resource "aws_lb_target_group" "target_group" {
   tags = {
     Name = "Target-Group"
   }
+
+  depends_on = [aws_lb.application_load_balancer]
 }
 
 resource "aws_lb_listener" "http_listener" {
@@ -94,6 +100,8 @@ resource "aws_lb_listener" "http_listener" {
       message_body = "OK"
     }
   }
+
+  depends_on = [aws_lb_target_group.target_group]
 }
 
 resource "aws_lb_target_group_attachment" "tg_attachment" {
@@ -101,6 +109,8 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
   target_group_arn    = aws_lb_target_group.target_group.arn
   target_id           = aws_instance.ec2_instances[count.index].id
   port                = 8080
+
+  depends_on = [aws_lb_listener.http_listener]
 }
 
 resource "aws_instance" "ec2_instances" {
@@ -111,7 +121,7 @@ resource "aws_instance" "ec2_instances" {
   associate_public_ip_address = false
   key_name               = var.key_name
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
-  security_groups        = [aws_security_group.ec2_sg.name]
+  security_groups        = [aws_security_group.ec2_sg.name]  
   tags = {
     Name = "ec2-instance-${count.index + 1}"
   }
@@ -123,9 +133,13 @@ resource "aws_instance" "ec2_instances" {
               systemctl enable amazon-ssm-agent
               systemctl start amazon-ssm-agent
               EOF
+
+  depends_on = [aws_security_group.ec2_sg]
 }
 
 resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   name = "ec2-ssm-instance-profile"
   role = aws_iam_role.ec2_ssm_role.name
+
+  depends_on = [aws_iam_role.ec2_ssm_role]
 }

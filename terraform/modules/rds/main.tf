@@ -3,8 +3,8 @@ resource "random_password" "db_password" {
   special = true
   upper   = true
   lower   = true
-  numeric  = true
-  override_special = "_%@"
+  numeric = true
+  override_special = "_%@" 
 }
 
 resource "aws_security_group" "rds_sg" {
