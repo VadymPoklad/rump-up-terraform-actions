@@ -1,0 +1,40 @@
+name: Ansible deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to download artifact from'
+        required: true
+
+jobs:
+  fetch-artifact-and-secrets:
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  
+
+      - name: Retrieve secrets from AWS Secrets Manager
+        id: secrets
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value --secret-id SPRING_PETCLINIC_DB --query SecretString --output text)
+          echo "SECRET=$SECRET" >> $GITHUB_ENV
+          echo $SECRET
+
+      - name: Download artifact from GitHub Release
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+          RELEASE_TAG=${{ github.event.inputs.release_tag }}
+          gh release download $RELEASE_TAG --dir /opt
+
+      - name: Check downloaded artifact
+        run: |
+          ls -a /opt
