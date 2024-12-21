@@ -32,10 +32,10 @@ jobs:
           DB_URL=$(echo $SECRET | jq -r '.DB_URL')
           DB_TYPE='postgres'
 
-          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
-          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
-          echo "DB_URL=$DB_URL" >> $GITHUB_ENV
-          echo "DB_TYPE=$DB_TYPE" >> $GITHUB_ENV
+          echo "DB_USER=${DB_USER}" >> $GITHUB_ENV
+          echo "DB_PASS=${DB_PASS}" >> $GITHUB_ENV
+          echo "DB_URL=${DB_URL}" >> $GITHUB_ENV
+          echo "DB_TYPE=${DB_TYPE}" >> $GITHUB_ENV
 
       - name: Download artifact from GitHub Release
         run: |
