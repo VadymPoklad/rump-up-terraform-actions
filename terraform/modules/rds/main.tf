@@ -1,10 +1,10 @@
 resource "random_password" "db_password" {
-  length  = 16
-  special = true
-  upper   = true
-  lower   = true
-  numeric = true
-  override_special = "_%@" 
+  length             = 16
+  special            = true
+  upper              = true
+  lower              = true
+  numeric            = true
+  override_special   = "_%@"
 }
 
 resource "aws_security_group" "rds_sg" {
@@ -32,21 +32,21 @@ resource "aws_security_group" "rds_sg" {
 }
 
 resource "aws_db_instance" "postgresql" {
-  identifier        = "my-postgres-db"
-  engine            = "postgres"
-  engine_version    = "16.3"
-  instance_class    = "db.t3.micro" 
-  allocated_storage = 20  
-  storage_type      = "gp2"
-  username          = var.db_username
-  password          = random_password.db_password.result
-  db_name           = var.db_name
-  port              = 5432
-  publicly_accessible = false
-  multi_az          = false
+  identifier            = "my-postgres-db"
+  engine                = "postgres"
+  engine_version        = "16.3"
+  instance_class        = "db.t3.micro" 
+  allocated_storage     = 20  
+  storage_type          = "gp2"
+  username              = var.db_username
+  password              = random_password.db_password.result
+  db_name               = var.db_name
+  port                  = 5432
+  publicly_accessible   = false
+  multi_az              = false
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
-  db_subnet_group_name = aws_db_subnet_group.rds_subnet_group.name
-  skip_final_snapshot = true
+  db_subnet_group_name  = aws_db_subnet_group.rds_subnet_group.name
+  skip_final_snapshot   = true
   tags = {
     Name = "MyPostgresDB"
   }
@@ -63,8 +63,10 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 }
 
 resource "aws_secretsmanager_secret" "db_secret" {
-  name        = "my-postgres-db-credentials"
+  name        = "SPRING_PETCLINIC_DB"
   description = "PostgreSQL credentials for the RDS instance"
+  
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "db_secret_version" {
@@ -77,4 +79,3 @@ resource "aws_secretsmanager_secret_version" "db_secret_version" {
     port     = "5432"
   })
 }
-

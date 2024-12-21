@@ -23,7 +23,7 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm_policy" {
 resource "aws_security_group" "ec2_sg" {
   name        = "ec2-ssm-sg"
   description = "Allow traffic for EC2 instances managed by SSM"
-  vpc_id      = var.vpc_id 
+  vpc_id      = var.vpc_id
 
   egress {
     cidr_blocks = ["0.0.0.0/0"]
@@ -40,7 +40,7 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   ingress {
-    cidr_blocks = ["0.0.0.0/0"]  
+    cidr_blocks = ["0.0.0.0/0"]
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -134,7 +134,10 @@ resource "aws_instance" "ec2_instances" {
               systemctl start amazon-ssm-agent
               EOF
 
-  depends_on = [aws_security_group.ec2_sg]
+  depends_on = [
+    aws_security_group.ec2_sg, 
+    aws_iam_instance_profile.ec2_ssm_profile
+  ]
 }
 
 resource "aws_iam_instance_profile" "ec2_ssm_profile" {
