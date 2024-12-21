@@ -72,10 +72,8 @@ resource "aws_secretsmanager_secret" "db_secret" {
 resource "aws_secretsmanager_secret_version" "db_secret_version" {
   secret_id     = aws_secretsmanager_secret.db_secret.id
   secret_string = jsonencode({
-    username = var.db_username
-    password = random_password.db_password.result  
-    db_name  = var.db_name
-    host     = aws_db_instance.postgresql.address
-    port     = "5432"
+    DB_USER = var.db_username               
+    DB_PASS = random_password.db_password.result  
+    DB_URL  = aws_db_instance.postgresql.address                      
   })
 }
