@@ -22,19 +22,49 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  
 
-      - name: Retrieve secrets from AWS Secrets Manager
+      - name: Retrieve DB secrets from AWS Secrets Manager
         id: secrets
         run: |
           SECRET=$(aws secretsmanager get-secret-value --secret-id SPRING_PETCLINIC_DB --query SecretString --output text)
-          echo "SECRET=$SECRET" >> $GITHUB_ENV
-          echo $SECRET
+          
+          DB_USER=$(echo $SECRET | jq -r '.DB_USER')
+          DB_PASS=$(echo $SECRET | jq -r '.DB_PASS')
+          DB_URL=$(echo $SECRET | jq -r '.DB_URL')
+          DB_TYPE='postgres'
+
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
+          echo "DB_URL=$DB_URL" >> $GITHUB_ENV
+          echo "DB_TYPE=$DB_TYPE" >> $GITHUB_ENV
 
       - name: Download artifact from GitHub Release
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
           RELEASE_TAG=${{ github.event.inputs.release_tag }}
           gh release download $RELEASE_TAG --dir /opt
+          
+          JAR_FILE=$(find /opt/${RELEASE_TAG} -name "*.jar" -print -quit)
 
-      - name: Check downloaded artifact
+          if [ -n "$JAR_FILE" ]; then
+            echo "JAR_PATH=$JAR_FILE" >> $GITHUB_ENV
+          else
+            echo "No JAR file found" >&2
+            exit 1
+          fi
+
+      - name: Install Ansible
         run: |
-          ls -a /opt
+          sudo apt update
+          sudo apt install -y ansible python3-pip
+          pip3 install boto3
+
+      - name: Run Ansible playbook to deploy
+        working-directory: ansible
+        run: |
+          ansible-playbook -i inventory/aws_ec2.yml playbooks/deploy.yaml
+        env:
+          DB_USER: ${{ env.DB_USER }}
+          DB_PASS: ${{ env.DB_PASS }}
+          DB_URL: ${{ env.DB_URL }}
+          DB_TYPE: ${{ env.DB_TYPE }}
+          JAR_PATH: ${{ env.JAR_PATH }}
