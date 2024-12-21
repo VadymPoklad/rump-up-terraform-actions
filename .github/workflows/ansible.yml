@@ -31,9 +31,9 @@ jobs:
 
       - name: Download artifact from GitHub Release
         run: |
-          gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
+          echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
           RELEASE_TAG=${{ github.event.inputs.release_tag }}
-          gh release download $RELEASE_TAG --pattern "*.jar" --dir /opt
+          gh release download $RELEASE_TAG --dir /opt
 
       - name: Check downloaded artifact
         run: |
