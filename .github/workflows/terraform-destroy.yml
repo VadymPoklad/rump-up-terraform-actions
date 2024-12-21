@@ -32,8 +32,8 @@ jobs:
         working-directory: terraform
         run: |
           terraform plan -out=tfplan
-      - name: Terraform Apply
+      - name: Terraform Destroy
         if: github.ref == 'refs/heads/main'
         working-directory: terraform
         run: |
-          terraform destory -auto-approve tfplan
+          terraform destroy -auto-approve tfplan
