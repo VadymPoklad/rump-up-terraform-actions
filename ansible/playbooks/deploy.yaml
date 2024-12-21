@@ -1,0 +1,42 @@
+---
+- name: Deploy JAR to Tomcat and configure environment variables
+  hosts: all
+  become: true
+  vars:
+    jar_file_path: "{{ lookup('env', 'JAR_PATH') }}"
+    tomcat_webapps_dir: "/opt/tomcat/webapps"  
+    db_pass: "{{ lookup('env', 'DB_PASS') }}"
+    db_user: "{{ lookup('env', 'DB_USER') }}"
+    db_url: "{{ lookup('env', 'DB_URL') }}"
+    db_type: "{{ lookup('env', 'DB_TYPE') }}"
+
+  tasks:
+    - name: Ensure Tomcat is installed and running
+      ansible.builtin.yum:
+        name: tomcat
+        state: present
+        enablerepo: epel
+
+    - name: Upload JAR file to Tomcat's webapps directory
+      ansible.builtin.copy:
+        src: "{{ jar_file_path }}"
+        dest: "{{ tomcat_webapps_dir }}/petclinic.jar"
+        owner: tomcat
+        group: tomcat
+        mode: '0644'
+
+    - name: Set environment variables for Tomcat
+      ansible.builtin.lineinfile:
+        path: /opt/tomcat/bin/setenv.sh
+        line: "{{ item }}"
+        create: yes
+      loop:
+        - "export DB_PASS={{ db_pass }}"
+        - "export DB_USER={{ db_user }}"
+        - "export DB_URL={{ db_url }}"
+        - "export DB_TYPE={{ db_type }}"
+
+    - name: Restart Tomcat service to apply changes
+      ansible.builtin.systemd:
+        name: tomcat
+        state: restarted
