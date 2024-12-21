@@ -1,4 +1,4 @@
-name: Java Build and Test
+name: App CI
 
 on:
   push:
@@ -49,6 +49,6 @@ jobs:
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
         run: |
-          gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
+          echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
           RELEASE_TAG="release-${{ env.BUILD_DATE }}-${{ env.COMMIT_HASH }}"
           gh release create $RELEASE_TAG application/target/*.jar --title "Release $RELEASE_TAG" --notes "Build release for commit ${{ env.COMMIT_HASH }}"
