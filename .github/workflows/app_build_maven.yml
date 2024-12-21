@@ -1,4 +1,4 @@
-name: App CI
+name: Java Build and Test
 
 on:
   push:
@@ -47,21 +47,8 @@ jobs:
           echo "BUILD_DATE=$(date '+%Y-%m-%d-%H%M%S')" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        id: release
-        uses: gh-action-release/create-release@v1
-        with:
-          tag_name: ${{ env.COMMIT_HASH }}
-          release_name: "Release ${{ env.COMMIT_HASH }} - ${{ env.BUILD_DATE }}"
-          body: "Release for commit ${{ env.COMMIT_HASH }}"
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Artifact to GitHub Release
-        uses: gh-action-release/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: application/target/*.jar
-          asset_name: application-${{ env.BUILD_DATE }}-${{ env.COMMIT_HASH }}.jar
-          asset_content_type: application/java-archive
-          token: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref == 'refs/heads/main'
+        run: |
+          gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG="release-${{ env.BUILD_DATE }}-${{ env.COMMIT_HASH }}"
+          gh release create $RELEASE_TAG application/target/*.jar --title "Release $RELEASE_TAG" --notes "Build release for commit ${{ env.COMMIT_HASH }}"
