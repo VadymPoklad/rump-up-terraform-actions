@@ -74,6 +74,6 @@ resource "aws_secretsmanager_secret_version" "db_secret_version" {
   secret_string = jsonencode({
     DB_USER = var.db_username               
     DB_PASS = random_password.db_password.result  
-    DB_URL  = aws_db_instance.postgresql.address                      
+    DB_URL  = "jdbc:postgresql://${aws_db_instance.postgresql.address}:${aws_db_instance.postgresql.port}/${var.db_name}"                     
   })
 }
