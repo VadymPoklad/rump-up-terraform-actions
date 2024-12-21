@@ -52,11 +52,18 @@ jobs:
             exit 1
           fi
 
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install boto3 botocore
+          
+      - name: Set Python interpreter for Ansible
+        run: echo "ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3" >> $GITHUB_ENV
+      
       - name: Install Ansible
         run: |
           sudo apt update
           sudo apt install -y ansible python3-pip
-          pip3 install boto3
 
       - name: Run Ansible playbook to deploy
         working-directory: ansible
