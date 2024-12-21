@@ -43,7 +43,7 @@ jobs:
           RELEASE_TAG=${{ github.event.inputs.release_tag }}
           gh release download $RELEASE_TAG --dir /opt
           
-          JAR_FILE=$(find /opt/${RELEASE_TAG} -name "*.jar" -print -quit)
+          JAR_FILE=$(find /opt -name "*.jar" -print -quit)
 
           if [ -n "$JAR_FILE" ]; then
             echo "JAR_PATH=$JAR_FILE" >> $GITHUB_ENV
