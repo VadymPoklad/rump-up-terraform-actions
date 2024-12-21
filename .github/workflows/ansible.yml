@@ -1,4 +1,4 @@
-name: Download Artifact and Fetch Secrets
+name: Ansible deploy
 
 on:
   workflow_dispatch:
