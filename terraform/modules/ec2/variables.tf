@@ -34,3 +34,8 @@ variable "key_name" {
   type        = string
   default     = ""
 }
+
+variable "private_route_table_ids" {
+  description = "Private rout tables ids"
+  type = list(string)
+}
