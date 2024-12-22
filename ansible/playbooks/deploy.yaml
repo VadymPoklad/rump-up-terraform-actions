@@ -3,7 +3,7 @@
   become: true
   vars:
     jar_file_path: "{{ lookup('env', 'JAR_PATH') }}"
-    tomcat_webapps_dir: "/opt/tomcat/webapps"  
+    tomcat_webapps_dir: "/opt/tomcat/webapps"
     db_pass: "{{ lookup('env', 'DB_PASS') }}"
     db_user: "{{ lookup('env', 'DB_USER') }}"
     db_url: "{{ lookup('env', 'DB_URL') }}"
