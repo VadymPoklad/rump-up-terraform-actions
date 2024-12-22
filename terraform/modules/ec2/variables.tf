@@ -1,3 +1,8 @@
+variable "region" {
+  description = "Region"
+  type        = string
+}
+
 variable "vpc_id" {
   description = "ID of the VPC where EC2 instances and ALB will be deployed"
   type        = string
