@@ -56,6 +56,14 @@ jobs:
           sudo apt update
           sudo apt install -y ansible
 
+      - name: Install boto3 and botocore in Ansible's virtual environment
+        run: |
+          /opt/pipx/venvs/ansible-core/bin/pip install boto3 botocore
+
+      - name: Set Python interpreter for Ansible
+        run: |
+          echo "ANSIBLE_PYTHON_INTERPRETER=$(which python3)" >> $GITHUB_ENV
+
       - name: Run Ansible playbook to deploy
         working-directory: ansible
         run: |
