@@ -51,7 +51,11 @@ jobs:
             exit 1
           fi
 
-      - name: Install dependencies
+      - name: Install dependencies for AWS inventory
+        run: |
+          /opt/pipx/venvs/ansible-core/bin/python -m pip install boto3 botocore
+
+      - name: Install Ansible
         run: |
           sudo apt update
           sudo apt install -y ansible python3-pip
@@ -68,4 +72,4 @@ jobs:
           DB_URL: ${{ env.DB_URL }}
           DB_TYPE: ${{ env.DB_TYPE }}
           JAR_PATH: ${{ env.JAR_PATH }}
-          ansible_python_interpreter: /usr/bin/python3
+          ANSIBLE_PYTHON_INTERPRETER: /opt/pipx/venvs/ansible-core/bin/python
