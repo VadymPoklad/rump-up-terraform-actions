@@ -14,5 +14,4 @@ keyed_groups:
     prefix: "name_"
 
 host_key_checking: false
-ansible_ssh_connection: "ssh" 
 ansible_connection: ssm 
