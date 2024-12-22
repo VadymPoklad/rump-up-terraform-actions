@@ -12,3 +12,7 @@ keyed_groups:
     prefix: "role_"
   - key: "tag:Name"
     prefix: "name_"
+
+host_key_checking: false
+ansible_ssh_connection: "ssh" 
+ansible_connection: ssm 
