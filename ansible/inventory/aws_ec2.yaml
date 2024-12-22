@@ -13,5 +13,4 @@ keyed_groups:
   - key: "tag:Name"
     prefix: "name_"
 
-host_key_checking: false
 ansible_connection: ssm 
