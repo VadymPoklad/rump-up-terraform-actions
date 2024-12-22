@@ -61,12 +61,19 @@ jobs:
           sudo apt install -y ansible python3-pip
           python3 -m pip install boto3 botocore
 
+      - name: Debug variables
+        run: |
+          echo "DB_USER=${{ env.DB_USER }}"
+          echo "DB_PASS=${{ env.DB_PASS }}"
+          echo "DB_URL=${{ env.DB_URL }}"
+          echo "DB_TYPE=${{ env.DB_TYPE }}"
+          echo "JAR_PATH=${{ env.JAR_PATH }}"
+
       - name: Run Ansible playbook to deploy
         working-directory: ansible
         run: |
           ansible-inventory -i inventory/aws_ec2.yaml --list
-
-          ansible-playbook -i inventory/aws_ec2.yaml playbooks/deploy.yaml
+          ansible-playbook -i inventory/aws_ec2.yaml playbooks/deploy.yaml -vvv
         env:
           DB_USER: ${{ env.DB_USER }}
           DB_PASS: ${{ env.DB_PASS }}
