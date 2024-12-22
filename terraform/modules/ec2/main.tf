@@ -153,12 +153,12 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
 }
 
 resource "aws_vpc_endpoint" "ssm" {
-  vpc_id = var.vpc_id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.ssm"
-  subnet_ids = var.private_subnet_ids
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssm"
+  subnet_ids         = var.private_subnet_ids
   security_group_ids = [aws_security_group.ec2_sg.id]
-
   private_dns_enabled = true
+  endpoint_type       = "Interface" 
 
   tags = {
     Name = "ssm-interface-endpoint"
@@ -166,12 +166,12 @@ resource "aws_vpc_endpoint" "ssm" {
 }
 
 resource "aws_vpc_endpoint" "ec2_messages" {
-  vpc_id = var.vpc_id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
-  subnet_ids = var.private_subnet_ids
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
+  subnet_ids         = var.private_subnet_ids
   security_group_ids = [aws_security_group.ec2_sg.id]
-
   private_dns_enabled = true
+  endpoint_type       = "Interface"  
 
   tags = {
     Name = "ec2messages-interface-endpoint"
@@ -179,17 +179,18 @@ resource "aws_vpc_endpoint" "ec2_messages" {
 }
 
 resource "aws_vpc_endpoint" "ssm_messages" {
-  vpc_id = var.vpc_id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
-  subnet_ids = var.private_subnet_ids
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
+  subnet_ids         = var.private_subnet_ids
   security_group_ids = [aws_security_group.ec2_sg.id]
-
   private_dns_enabled = true
+  endpoint_type       = "Interface" 
 
   tags = {
     Name = "ssmmessages-interface-endpoint"
   }
 }
+
 
 data "aws_region" "current" {
   provider = aws
