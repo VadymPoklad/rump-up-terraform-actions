@@ -51,19 +51,10 @@ jobs:
             exit 1
           fi
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install boto3 botocore
-          ansible-galaxy collection install amazon.aws
-
-      - name: Set Python interpreter for Ansible
-        run: echo "ANSIBLE_PYTHON_INTERPRETER=/usr/bin/python3" >> $GITHUB_ENV
-      
       - name: Install Ansible
         run: |
           sudo apt update
-          sudo apt install -y ansible python3-pip
+          sudo apt install -y ansible
 
       - name: Run Ansible playbook to deploy
         working-directory: ansible
