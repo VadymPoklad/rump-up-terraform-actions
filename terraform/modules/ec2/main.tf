@@ -125,7 +125,7 @@ resource "aws_instance" "ec2_instances" {
   associate_public_ip_address = false
   key_name               = var.key_name
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]  
   tags = {
     Name = "ec2-instance-${count.index + 1}"
     Role = "WebServer"
@@ -140,7 +140,7 @@ resource "aws_instance" "ec2_instances" {
               EOF
 
   depends_on = [
-    aws_security_group.ec2_sg,
+    aws_security_group.ec2_sg, 
     aws_iam_instance_profile.ec2_ssm_profile
   ]
 }
@@ -150,48 +150,4 @@ resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   role = aws_iam_role.ec2_ssm_role.name
 
   depends_on = [aws_iam_role.ec2_ssm_role]
-}
-
-resource "aws_vpc_endpoint" "ssm" {
-  vpc_id             = var.vpc_id
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssm"
-  subnet_ids         = var.private_subnet_ids
-  security_group_ids = [aws_security_group.ec2_sg.id]
-  private_dns_enabled = true
-  vpc_endpoint_type  = "Interface" 
-
-  tags = {
-    Name = "ssm-interface-endpoint"
-  }
-}
-
-resource "aws_vpc_endpoint" "ec2_messages" {
-  vpc_id             = var.vpc_id
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
-  subnet_ids         = var.private_subnet_ids
-  security_group_ids = [aws_security_group.ec2_sg.id]
-  private_dns_enabled = true
-  vpc_endpoint_type       = "Interface"  
-
-  tags = {
-    Name = "ec2messages-interface-endpoint"
-  }
-}
-
-resource "aws_vpc_endpoint" "ssm_messages" {
-  vpc_id             = var.vpc_id
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
-  subnet_ids         = var.private_subnet_ids
-  security_group_ids = [aws_security_group.ec2_sg.id]
-  private_dns_enabled = true
-  vpc_endpoint_type       = "Interface" 
-
-  tags = {
-    Name = "ssmmessages-interface-endpoint"
-  }
-}
-
-
-data "aws_region" "current" {
-  provider = aws
 }
