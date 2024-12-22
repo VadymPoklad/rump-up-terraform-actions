@@ -65,6 +65,9 @@ jobs:
         working-directory: ansible
         run: |
           ansible-inventory -i inventory/aws_ec2.yaml --list
+
+          ansible -i inventory/aws_ec2.yaml -m ping all
+
           ansible-playbook -i inventory/aws_ec2.yaml playbooks/deploy.yaml
         env:
           DB_USER: ${{ env.DB_USER }}
