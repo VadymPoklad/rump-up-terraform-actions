@@ -15,7 +15,7 @@ module "ec2" {
   private_subnet_ids = module.vpc.private_subnet_ids
   ami_id = "ami-01816d07b1128cd2d" 
   instance_type = "t2.micro"
-  private_route_table_ids = module.vpc.private_route_table_ids
+  private_route_table_id = module.vpc.private_route_table_ids[0]
 }
 
 module "rds" {
