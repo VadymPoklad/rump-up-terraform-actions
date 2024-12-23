@@ -1,3 +1,4 @@
+---
 - name: Deploy JAR to Tomcat and configure environment variables
   hosts: all
   become: true
@@ -8,9 +9,7 @@
     db_user: "{{ lookup('env', 'DB_USER') }}"
     db_url: "{{ lookup('env', 'DB_URL') }}"
     db_type: "{{ lookup('env', 'DB_TYPE') }}"
-    ansible_connection: aws_ssm
-    ansible_aws_ssm_region: us-east-1
-    ansible_aws_ssm_bucket_name: ssm-petclinic-bucket
+
   tasks:
     - name: Ensure Tomcat is installed and running
       ansible.builtin.yum:
