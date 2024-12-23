@@ -8,7 +8,7 @@ on:
         required: true
 
 jobs:
-  fetch-artifact-and-secrets:
+  ansible:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -35,6 +35,13 @@ jobs:
           echo "DB_PASS=${DB_PASS}" >> $GITHUB_ENV
           echo "DB_URL=${DB_URL}" >> $GITHUB_ENV
           echo "DB_TYPE=${DB_TYPE}" >> $GITHUB_ENV
+
+      - name: Retrieve SSH private key from AWS Secrets Manager
+        id: ssh_secret
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value --secret-id pet-clinic-ssh-private-key --query SecretString --output text)
+          echo "$SECRET" > ansible/ssh_private_key.pem
+          chmod 600 ansible/ssh_private_key.pem
 
       - name: Download artifact from GitHub Release
         run: |
@@ -67,3 +74,4 @@ jobs:
           DB_PASS: ${{ env.DB_PASS }}
           DB_URL: ${{ env.DB_URL }}
           DB_TYPE: ${{ env.DB_TYPE }}
+          ANSIBLE_PRIVATE_KEY_FILE: ansible/ssh_private_key.pem
