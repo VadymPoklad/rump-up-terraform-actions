@@ -1,9 +1,10 @@
 - name: Deploy JAR to Tomcat and configure environment variables
   hosts: all
   become: true
+  connection: community.aws.aws_ssm
   vars:
-    jar_file_path: "{{ lookup('env', 'JAR_PATH') }}"
     tomcat_webapps_dir: "/opt/tomcat/webapps"
+    jar_file_path: "{{ lookup('env', 'JAR_PATH') }}"
     db_pass: "{{ lookup('env', 'DB_PASS') }}"
     db_user: "{{ lookup('env', 'DB_USER') }}"
     db_url: "{{ lookup('env', 'DB_URL') }}"
