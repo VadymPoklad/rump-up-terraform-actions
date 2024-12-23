@@ -62,7 +62,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ansible python3-pip
-          python3 -m pip install boto3 botocore
+          /opt/pipx/venvs/ansible-core/bin/python -m pip install boto3 botocore
 
       - name: Run Ansible playbook to deploy
         working-directory: ansible
@@ -75,3 +75,4 @@ jobs:
           DB_URL: ${{ env.DB_URL }}
           DB_TYPE: ${{ env.DB_TYPE }}
           ANSIBLE_PRIVATE_KEY_FILE: ansible/ssh_private_key.pem
+          ANSIBLE_PYTHON_INTERPRETER: /opt/pipx/venvs/ansible-core/bin/python
