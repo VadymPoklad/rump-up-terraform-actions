@@ -44,10 +44,18 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "tcp"
   }
 
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+  }
+
   tags = {
     Name = "ec2-ssm-sg"
   }
 }
+
 
 resource "aws_lb" "application_load_balancer" {
   name                        = "app-lb"
