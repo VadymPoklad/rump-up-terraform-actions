@@ -39,15 +39,8 @@ resource "aws_security_group" "ec2_sg" {
 
   ingress {
     cidr_blocks = ["0.0.0.0/0"]
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-  }
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
-    from_port   = 22
-    to_port     = 22
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
   }
 
@@ -56,68 +49,9 @@ resource "aws_security_group" "ec2_sg" {
   }
 }
 
-resource "aws_lb" "application_load_balancer" {
-  name                        = "app-lb"
-  internal                    = false
-  load_balancer_type          = "application"
-  security_groups             = [aws_security_group.ec2_sg.id]
-  subnets                     = var.public_subnet_ids
-  enable_deletion_protection  = false
-  enable_cross_zone_load_balancing = true
-
-  tags = {
-    Name = "App-Load-Balancer"
-  }
-
-  depends_on = [aws_security_group.ec2_sg]
-}
-
-resource "aws_lb_target_group" "target_group" {
-  name     = "ec2-target-group"
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    path                = "/"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    port                = "traffic-port"
-  }
-
-  tags = {
-    Name = "Target-Group"
-  }
-
-  depends_on = [aws_lb.application_load_balancer]
-}
-
-resource "aws_lb_listener" "http_listener" {
-  load_balancer_arn = aws_lb.application_load_balancer.arn
-  port              = 8080
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "fixed-response"
-    fixed_response {
-      status_code = 200
-      content_type = "text/plain"
-      message_body = "OK"
-    }
-  }
-
-  depends_on = [aws_lb_target_group.target_group]
-}
-
-resource "aws_lb_target_group_attachment" "tg_attachment" {
-  count               = length(var.private_subnet_ids)
-  target_group_arn    = aws_lb_target_group.target_group.arn
-  target_id           = aws_instance.ec2_instances[count.index].id
-  port                = 8080
-
-  depends_on = [aws_lb_listener.http_listener]
+resource "aws_iam_instance_profile" "ec2_ssm_profile" {
+  name = "ec2-ssm-instance-profile"
+  role = aws_iam_role.ec2_ssm_role.name
 }
 
 resource "aws_instance" "ec2_instances" {
@@ -148,13 +82,77 @@ resource "aws_instance" "ec2_instances" {
   ]
 }
 
-resource "aws_iam_instance_profile" "ec2_ssm_profile" {
-  name = "ec2-ssm-instance-profile"
-  role = aws_iam_role.ec2_ssm_role.name
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssm"
+  subnet_ids         = var.private_subnet_ids
+  security_group_ids = [aws_security_group.ec2_sg.id]
+  private_dns_enabled = true
+  vpc_endpoint_type  = "Interface"
+
+  tags = {
+    Name = "ssm-interface-endpoint"
+  }
+}
+
+resource "aws_vpc_endpoint" "ec2_messages" {
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
+  subnet_ids         = var.private_subnet_ids
+  security_group_ids = [aws_security_group.ec2_sg.id]
+  private_dns_enabled = true
+  vpc_endpoint_type  = "Interface"
+
+  tags = {
+    Name = "ec2messages-interface-endpoint"
+  }
+}
+
+resource "aws_vpc_endpoint" "ssm_messages" {
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
+  subnet_ids         = var.private_subnet_ids
+  security_group_ids = [aws_security_group.ec2_sg.id]
+  private_dns_enabled = true
+  vpc_endpoint_type  = "Interface"
+
+  tags = {
+    Name = "ssmmessages-interface-endpoint"
+  }
+}
+
+resource "aws_vpc_endpoint" "kms" {
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.kms"
+  subnet_ids         = var.private_subnet_ids
+  security_group_ids = [aws_security_group.ec2_sg.id]
+  private_dns_enabled = true
+  vpc_endpoint_type  = "Interface"
+
+  tags = {
+    Name = "kms-interface-endpoint"
+  }
+}
+
+resource "aws_vpc_endpoint" "cloudwatch_logs" {
+  vpc_id             = var.vpc_id
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.logs"
+  subnet_ids         = var.private_subnet_ids
+  security_group_ids = [aws_security_group.ec2_sg.id]
+  private_dns_enabled = true
+  vpc_endpoint_type  = "Interface"
+
+  tags = {
+    Name = "cloudwatch-logs-interface-endpoint"
+  }
+}
+
+data "aws_region" "current" {
+  provider = aws
 }
 
 resource "aws_s3_bucket" "ansible_petclinic_ssm" {
-  bucket = "ansible-petclinic-ssm" 
+  bucket = "ansible-petclinic-ssm"
   acl    = "private"
 
   versioning {
@@ -169,47 +167,4 @@ resource "aws_s3_bucket" "ansible_petclinic_ssm" {
     Name        = "ansible-petclinic-ssm"
     Project     = "PetClinic"
   }
-}
-
-resource "aws_vpc_endpoint" "ssm" {
-  vpc_id             = var.vpc_id
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssm"
-  subnet_ids         = var.private_subnet_ids
-  security_group_ids = [aws_security_group.ec2_sg.id]
-  private_dns_enabled = true
-  vpc_endpoint_type  = "Interface" 
-
-  tags = {
-    Name = "ssm-interface-endpoint"
-  }
-}
-
-resource "aws_vpc_endpoint" "ec2_messages" {
-  vpc_id             = var.vpc_id
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.ec2messages"
-  subnet_ids         = var.private_subnet_ids
-  security_group_ids = [aws_security_group.ec2_sg.id]
-  private_dns_enabled = true
-  vpc_endpoint_type       = "Interface"  
-
-  tags = {
-    Name = "ec2messages-interface-endpoint"
-  }
-}
-
-resource "aws_vpc_endpoint" "ssm_messages" {
-  vpc_id             = var.vpc_id
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.ssmmessages"
-  subnet_ids         = var.private_subnet_ids
-  security_group_ids = [aws_security_group.ec2_sg.id]
-  private_dns_enabled = true
-  vpc_endpoint_type       = "Interface" 
-
-  tags = {
-    Name = "ssmmessages-interface-endpoint"
-  }
-}
-
-data "aws_region" "current" {
-  provider = aws
 }
