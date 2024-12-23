@@ -20,6 +20,11 @@ resource "aws_iam_role_policy_attachment" "ec2_ssm_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy_attachment" "ec2_s3_policy" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
 resource "aws_security_group" "ec2_sg" {
   name        = "ec2-ssm-sg"
   description = "Allow traffic for EC2 instances managed by SSM"
@@ -45,8 +50,6 @@ resource "aws_security_group" "ec2_sg" {
     to_port     = 22
     protocol    = "tcp"
   }
-
-  depends_on = [aws_iam_role.ec2_ssm_role]
 
   tags = {
     Name = "ec2-ssm-sg"
@@ -148,8 +151,24 @@ resource "aws_instance" "ec2_instances" {
 resource "aws_iam_instance_profile" "ec2_ssm_profile" {
   name = "ec2-ssm-instance-profile"
   role = aws_iam_role.ec2_ssm_role.name
+}
 
-  depends_on = [aws_iam_role.ec2_ssm_role]
+resource "aws_s3_bucket" "ansible_petclinic_ssm" {
+  bucket = "ansible-petclinic-ssm" 
+  acl    = "private"
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  tags = {
+    Name        = "ansible-petclinic-ssm"
+    Project     = "PetClinic"
+  }
 }
 
 resource "aws_vpc_endpoint" "ssm" {
@@ -190,7 +209,6 @@ resource "aws_vpc_endpoint" "ssm_messages" {
     Name = "ssmmessages-interface-endpoint"
   }
 }
-
 
 data "aws_region" "current" {
   provider = aws
