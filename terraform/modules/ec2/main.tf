@@ -1,5 +1,5 @@
 resource "aws_iam_role" "ec2_ssm_role" {
-  name = "ec2-ssh-role"
+  name = "ec2-ssm-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -15,9 +15,14 @@ resource "aws_iam_role" "ec2_ssm_role" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "ec2_ssm_policy" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_security_group" "ec2_sg" {
-  name        = "ec2-ssh-sg"
-  description = "Allow SSH and HTTP traffic to EC2 instances in private subnet"
+  name        = "ec2-ssm-sg"
+  description = "Allow traffic for EC2 instances managed by SSM"
   vpc_id      = var.vpc_id
 
   egress {
@@ -29,53 +34,23 @@ resource "aws_security_group" "ec2_sg" {
 
   ingress {
     cidr_blocks = ["0.0.0.0/0"]
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-  }
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
   }
 
-  tags = {
-    Name = "ec2-ssh-sg"
-  }
-}
-
-resource "aws_instance" "ec2_instances" {
-  count                    = length(var.private_subnet_ids)
-  ami                      = var.ami_id
-  instance_type            = var.instance_type
-  subnet_id                = element(var.private_subnet_ids, count.index)
-  associate_public_ip_address = false
-  key_name                 = var.key_name
-  iam_instance_profile     = aws_iam_instance_profile.ec2_ssm_profile.name
-  vpc_security_group_ids   = [aws_security_group.ec2_sg.id]
-  tags = {
-    Name = "ec2-instance-${count.index + 1}"
-    Role = "WebServer"
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
   }
 
-  user_data = <<-EOF
-              #!/bin/bash
-              yum install -y httpd
-              systemctl start httpd
-              systemctl enable httpd
-              echo "Hello from EC2 Instance ${count.index + 1}" > /var/www/html/index.html
-              EOF
+  depends_on = [aws_iam_role.ec2_ssm_role]
 
-  depends_on = [
-    aws_security_group.ec2_sg,
-  ]
-}
-
-resource "aws_iam_instance_profile" "ec2_ssm_profile" {
-  name = "ec2-ssh-instance-profile"
-  role = aws_iam_role.ec2_ssm_role.name
+  tags = {
+    Name = "ec2-ssm-sg"
+  }
 }
 
 resource "aws_lb" "application_load_balancer" {
@@ -142,17 +117,37 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
   depends_on = [aws_lb_listener.http_listener]
 }
 
-resource "aws_instance" "bastion_host" {
-  ami                     = var.bastion_ami_id
-  instance_type           = "t2.micro"
-  subnet_id               = var.public_subnet_id
-  associate_public_ip_address = true
-  key_name                = var.key_name
-  security_group_ids      = [aws_security_group.ec2_sg.id]
-
+resource "aws_instance" "ec2_instances" {
+  count                  = length(var.private_subnet_ids)
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
+  subnet_id              = element(var.private_subnet_ids, count.index)
+  associate_public_ip_address = false
+  key_name               = var.key_name
+  iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]  
   tags = {
-    Name = "bastion-host"
+    Name = "ec2-instance-${count.index + 1}"
+    Role = "WebServer"
   }
 
-  depends_on = [aws_security_group.ec2_sg]
+  user_data = <<-EOF
+              #!/bin/bash
+              yum install -y aws-cli
+              yum install -y amazon-ssm-agent
+              systemctl enable amazon-ssm-agent
+              systemctl start amazon-ssm-agent
+              EOF
+
+  depends_on = [
+    aws_security_group.ec2_sg, 
+    aws_iam_instance_profile.ec2_ssm_profile
+  ]
+}
+
+resource "aws_iam_instance_profile" "ec2_ssm_profile" {
+  name = "ec2-ssm-instance-profile"
+  role = aws_iam_role.ec2_ssm_role.name
+
+  depends_on = [aws_iam_role.ec2_ssm_role]
 }
