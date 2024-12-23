@@ -8,13 +8,8 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "public_subnet_ids" {
-  description = "List of IDs of the public subnets where the ALB will be deployed"
-  type        = list(string)
-}
-
-variable "private_subnet_ids" {
-  description = "List of IDs of the private subnets where the EC2 instances will be deployed"
+variable "subnet_ids" {
+  description = "List of IDs of the subnets where the ALB will be deployed"
   type        = list(string)
 }
 

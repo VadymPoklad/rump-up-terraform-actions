@@ -58,7 +58,7 @@ resource "aws_lb" "application_load_balancer" {
   internal                    = false
   load_balancer_type          = "application"
   security_groups             = [aws_security_group.ec2_sg.id]
-  subnets                     = var.public_subnet_ids
+  subnets                     = var.subnet_ids
   enable_deletion_protection  = false
   enable_cross_zone_load_balancing = true
 
@@ -109,7 +109,7 @@ resource "aws_lb_listener" "http_listener" {
 }
 
 resource "aws_lb_target_group_attachment" "tg_attachment" {
-  count               = length(var.private_subnet_ids)
+  count               = length(var.subnet_ids)
   target_group_arn    = aws_lb_target_group.target_group.arn
   target_id           = aws_instance.ec2_instances[count.index].id
   port                = 8080
@@ -118,10 +118,10 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
 }
 
 resource "aws_instance" "ec2_instances" {
-  count                  = length(var.private_subnet_ids)
+  count                  = length(var.subnet_ids)
   ami                    = var.ami_id
   instance_type          = var.instance_type
-  subnet_id              = element(var.private_subnet_ids, count.index)
+  subnet_id              = element(var.subnet_ids, count.index)
   associate_public_ip_address = false
   key_name               = var.key_name
   iam_instance_profile   = aws_iam_instance_profile.ec2_ssm_profile.name

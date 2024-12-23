@@ -13,7 +13,7 @@ resource "aws_security_group" "rds_sg" {
   vpc_id      = var.vpc_id
 
   ingress {
-    cidr_blocks = var.private_subnet_cidrs
+    cidr_blocks = var.subnet_cidrs
     from_port   = 5432  
     to_port     = 5432
     protocol    = "tcp"
@@ -54,7 +54,7 @@ resource "aws_db_instance" "postgresql" {
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name        = "rds-subnet-group"
-  subnet_ids  = var.private_subnet_ids
+  subnet_ids  = var.subnet_ids
   description = "RDS subnet group for private subnets"
 
   tags = {
