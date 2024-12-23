@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 resource "aws_s3_bucket" "web_server_bucket" {
   bucket = "ssm-petclinic-bucket"
   acl    = "private"
@@ -88,6 +92,70 @@ resource "aws_security_group" "ec2_sg" {
   tags = {
     Name = "ec2-sg"
   }
+}
+
+resource "aws_lb" "application_load_balancer" {
+  name                        = "app-lb"
+  internal                    = false
+  load_balancer_type          = "application"
+  security_groups             = [aws_security_group.ec2_sg.id]
+  subnets                     = var.subnet_ids
+  enable_deletion_protection  = false
+  enable_cross_zone_load_balancing = true
+
+  tags = {
+    Name = "App-Load-Balancer"
+  }
+
+  depends_on = [aws_security_group.ec2_sg]
+}
+
+resource "aws_lb_target_group" "target_group" {
+  name     = "ec2-target-group"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    path                = "/"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    port                = "traffic-port"
+  }
+
+  tags = {
+    Name = "Target-Group"
+  }
+
+  depends_on = [aws_lb.application_load_balancer]
+}
+
+resource "aws_lb_listener" "http_listener" {
+  load_balancer_arn = aws_lb.application_load_balancer.arn
+  port              = 8080
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "fixed-response"
+    fixed_response {
+      status_code = 200
+      content_type = "text/plain"
+      message_body = "OK"
+    }
+  }
+
+  depends_on = [aws_lb_target_group.target_group]
+}
+
+resource "aws_lb_target_group_attachment" "tg_attachment" {
+  count               = length(var.subnet_ids)
+  target_group_arn    = aws_lb_target_group.target_group.arn
+  target_id           = aws_instance.web_server[count.index].id
+  port                = 8080
+
+  depends_on = [aws_lb_listener.http_listener]
 }
 
 resource "aws_instance" "web_server" {

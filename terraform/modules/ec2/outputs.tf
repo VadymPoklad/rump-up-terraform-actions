@@ -1,6 +1,6 @@
 output "ec2_instance_ids" {
   description = "ID EC2"
-  value       = [for instance in aws_instance.ec2_instances : instance.id]
+  value       = [for instance in aws_instance.web_server : instance.id]
 }
 
 output "alb_dns_name" {
