@@ -1,3 +1,63 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_secretsmanager_secret" "ssh_private_key" {
+  name        = "pet-clinic-ssh-private-key"
+  description = "Private SSH key for EC2 access"
+}
+
+resource "aws_secretsmanager_secret_version" "ssh_private_key_version" {
+  secret_id     = aws_secretsmanager_secret.ssh_private_key.id
+  secret_string = tls_private_key.example.private_key_pem
+}
+
+resource "aws_key_pair" "ec2_key_pair" {
+  key_name   = "my-key-pair"
+  public_key = tls_private_key.example.public_key_openssh
+}
+
+resource "aws_security_group" "ec2_sg" {
+  name        = "ec2-sg"
+  description = "Allow traffic for EC2 instances"
+  vpc_id      = var.vpc_id
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+  }
+
+  ingress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+  }
+}
+
+resource "aws_instance" "web_server" {
+  count                      = length(var.subnet_ids)
+  ami                        = var.ami_id
+  instance_type              = var.instance_type
+  subnet_id                  = element(var.subnet_ids, count.index)
+  associate_public_ip_address = true
+  key_name                   = aws_key_pair.ec2_key_pair.key_name
+  iam_instance_profile       = aws_iam_instance_profile.ec2_role_profile.name
+  vpc_security_group_ids     = [aws_security_group.ec2_sg.id]
+  
+  tags = {
+    Name = "web-server-${count.index + 1}"
+    Role = "WebServer"
+  }
+}
+
 resource "aws_iam_role" "ec2_role" {
   name = "ec2-role"
 
@@ -15,37 +75,9 @@ resource "aws_iam_role" "ec2_role" {
   })
 }
 
-resource "aws_security_group" "ec2_sg" {
-  name        = "ec2-sg"
-  description = "Allow traffic for EC2 instances"
-  vpc_id      = var.vpc_id
-
-  egress {
-    cidr_blocks = ["0.0.0.0/0"]
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-  }
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-  }
-
-  ingress {
-    cidr_blocks = ["0.0.0.0/0"]
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-  }
-
-  depends_on = [aws_iam_role.ec2_role]
-
-  tags = {
-    Name = "ec2-sg"
-  }
+resource "aws_iam_instance_profile" "ec2_role_profile" {
+  name = "ec2-instance-profile"
+  role = aws_iam_role.ec2_role.name
 }
 
 resource "aws_lb" "application_load_balancer" {
@@ -56,12 +88,6 @@ resource "aws_lb" "application_load_balancer" {
   subnets                     = var.subnet_ids
   enable_deletion_protection  = false
   enable_cross_zone_load_balancing = true
-
-  tags = {
-    Name = "App-Load-Balancer"
-  }
-
-  depends_on = [aws_security_group.ec2_sg]
 }
 
 resource "aws_lb_target_group" "target_group" {
@@ -78,12 +104,6 @@ resource "aws_lb_target_group" "target_group" {
     unhealthy_threshold = 3
     port                = "traffic-port"
   }
-
-  tags = {
-    Name = "Target-Group"
-  }
-
-  depends_on = [aws_lb.application_load_balancer]
 }
 
 resource "aws_lb_listener" "http_listener" {
@@ -99,8 +119,6 @@ resource "aws_lb_listener" "http_listener" {
       message_body = "OK"
     }
   }
-
-  depends_on = [aws_lb_target_group.target_group]
 }
 
 resource "aws_lb_target_group_attachment" "tg_attachment" {
@@ -108,32 +126,4 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
   target_group_arn    = aws_lb_target_group.target_group.arn
   target_id           = aws_instance.web_server[count.index].id
   port                = 8080
-
-  depends_on = [aws_lb_listener.http_listener]
-}
-
-resource "aws_instance" "web_server" {
-  count                  = length(var.subnet_ids)
-  ami                    = var.ami_id
-  instance_type          = var.instance_type
-  subnet_id              = element(var.subnet_ids, count.index)
-  associate_public_ip_address = false
-  key_name               = var.key_name
-  iam_instance_profile   = aws_iam_instance_profile.ec2_role_profile.name
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
-  tags = {
-    Name = "web-server-${count.index + 1}"
-    Role = "WebServer"
-  }
-
-  depends_on = [
-    aws_security_group.ec2_sg
-  ]
-}
-
-resource "aws_iam_instance_profile" "ec2_role_profile" {
-  name = "ec2-instance-profile"
-  role = aws_iam_role.ec2_role.name
-
-  depends_on = [aws_iam_role.ec2_role]
 }
