@@ -67,7 +67,7 @@ jobs:
       - name: TEST
         working-directory: ansible
         run: |
-          ssh -i "ssh_private_key.pem" ec2-user@ec2-52-207-207-92.compute-1.amazonaws.com "echo 'SSH connection successful'"
+          ssh -o StrictHostKeyChecking=no -i "ssh_private_key.pem" ec2-user@ec2-52-207-207-92.compute-1.amazonaws.com "echo 'SSH connection successful'"
 
       - name: Run Ansible playbook to deploy
         working-directory: ansible
