@@ -14,9 +14,9 @@
         name: "*"
         state: latest
 
-    - name: Install OpenJDK 17
+    - name: Install Amazon Corretto 17
       yum:
-        name: java-17-openjdk
+        name: java-17-amazon-corretto-headless
         state: present
 
     - name: Check Java version
