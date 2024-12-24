@@ -15,17 +15,10 @@
     tomcat_download_url: "https://downloads.apache.org/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_archive }}"
 
   tasks:
-    - name: Check if Java is installed
-      command: java -version
-      register: java_check
-      ignore_errors: yes
-
-    - name: Install Java if not installed
-      when: java_check.failed
-      apt:
-        name: openjdk-11-jdk
+    - name: Install Java (OpenJDK 17) on Amazon Linux 2023
+      amazon.aws.yum:
+        name: java-17-openjdk-devel
         state: present
-      become: true
 
     - name: Check if Tomcat is already installed
       stat:
