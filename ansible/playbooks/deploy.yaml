@@ -1,79 +1,84 @@
 ---
-- name: Install Tomcat and deploy application
-  hosts: all
+- name: Set up Spring Boot application on AWS Linux with auto-start
+  hosts: aws_servers
   become: true
   vars:
-    tomcat_webapps_dir: "/opt/tomcat/webapps"
     jar_file_path: "{{ lookup('env', 'JAR_PATH') }}"
     db_pass: "{{ lookup('env', 'DB_PASS') }}"
     db_user: "{{ lookup('env', 'DB_USER') }}"
     db_url: "{{ lookup('env', 'DB_URL') }}"
-    db_type: "{{ lookup('env', 'DB_TYPE') }}"
-    tomcat_install_dir: "/opt/tomcat"
-    tomcat_version: "9.0.50"
-    tomcat_archive: "apache-tomcat-{{ tomcat_version }}.tar.gz"
-    tomcat_download_url: "https://downloads.apache.org/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_archive }}"
 
-    - name: Install Java
+  tasks:
+    - name: Update system
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install OpenJDK 17
       yum:
         name: java-17-openjdk
         state: present
 
-    - name: Check if Tomcat is already installed
-      stat:
-        path: "{{ tomcat_install_dir }}"
-      register: tomcat_stat
+    - name: Check Java version
+      command: java -version
+      register: java_version
+      changed_when: false
 
-    - name: Download and install Tomcat if not installed
-      when: not tomcat_stat.stat.exists
-      block:
-        - name: Download Tomcat archive
-          get_url:
-            url: "{{ tomcat_download_url }}"
-            dest: "/tmp/{{ tomcat_archive }}"
+    - debug:
+        msg: "Installed Java version: {{ java_version.stdout }}"
 
-        - name: Extract Tomcat archive
-          unarchive:
-            src: "/tmp/{{ tomcat_archive }}"
-            dest: "{{ tomcat_install_dir }}"
-            remote_src: yes
-
-        - name: Set correct permissions for Tomcat
-          file:
-            path: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}"
-            owner: root
-            group: root
-            mode: "0755"
-            recurse: yes
-
-    - name: Create webapps directory if not exists
+    - name: Create directory for the application
       file:
-        path: "{{ tomcat_webapps_dir }}"
+        path: "/opt/myapp"
         state: directory
-        owner: root
-        group: root
-        mode: "0755"
+        mode: '0755'
 
-    - name: Copy JAR file to the server
+    - name: Copy .jar file from host to server
       copy:
         src: "{{ jar_file_path }}"
-        dest: "{{ tomcat_webapps_dir }}/{{ jar_file_path | basename }}"
-        owner: root
-        group: root
-        mode: "0644"
+        dest: "/opt/myapp/app.jar"
+        mode: '0644'
 
-    - name: Create environment variables file
+    - name: Create systemd unit file for auto-start
       copy:
+        dest: "/etc/systemd/system/springboot-app.service"
         content: |
-          export POSTGRES_PASS={{ db_pass }}
-          export POSTGRES_USER={{ db_user }}
-          export POSTGRES_URL={{ db_url }}
-          export DB_TYPE=postgres
-        dest: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}/bin/setenv.sh"
-        mode: "0755"
+          [Unit]
+          Description=Spring Boot Application
+          After=network.target
 
-    - name: Start Tomcat
-      shell: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}/bin/startup.sh"
-      args:
-        chdir: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}/bin"
-      become: true
+          [Service]
+          User=ec2-user
+          WorkingDirectory=/opt/myapp
+          ExecStart=/usr/bin/java -jar /opt/myapp/app.jar
+          Environment="POSTGRES_PASS={{ db_pass }}"
+          Environment="POSTGRES_PASS={{ db_user }}"
+          Environment="POSTGRES_PASS={{ db_url }}"
+          Environment="POSTGRES_PASS=postgres"
+          SuccessExitStatus=143
+          Restart=always
+          RestartSec=10
+          StandardOutput=syslog
+          StandardError=syslog
+          SyslogIdentifier=springboot-app
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd to apply new services
+      command: systemctl daemon-reload
+
+    - name: Enable and start Spring Boot service
+      systemd:
+        name: springboot-app
+        enabled: yes
+        state: started
+
+    - name: Check the status of Spring Boot service
+      systemd:
+        name: springboot-app
+        state: started
+      register: spring_boot_status
+
+    - debug:
+        msg: "Spring Boot service status: {{ spring_boot_status.status }}"
