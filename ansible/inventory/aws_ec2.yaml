@@ -6,7 +6,7 @@ regions:
 filters:
   "tag:Role": "WebServer"
 hostnames:
-  - ip-address
+  - dns-name
 keyed_groups:
   - key: "tag:Role"
     prefix: "role_"
