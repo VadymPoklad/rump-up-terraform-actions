@@ -57,9 +57,7 @@ jobs:
             echo "No JAR file found" >&2
             exit 1
           fi
-      - name: TEST
-        run: |
-          cat ansible/ssh_private_key.pem
+
       - name: Install Ansible and dependencies for AWS inventory
         run: |
           sudo apt update
