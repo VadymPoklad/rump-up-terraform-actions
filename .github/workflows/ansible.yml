@@ -75,5 +75,5 @@ jobs:
           DB_PASS: ${{ env.DB_PASS }}
           DB_URL: ${{ env.DB_URL }}
           DB_TYPE: ${{ env.DB_TYPE }}
-          ANSIBLE_PRIVATE_KEY_FILE: ansible/ssh_private_key.pem
+          ANSIBLE_PRIVATE_KEY_FILE: ssh_private_key.pem
           ANSIBLE_PYTHON_INTERPRETER: /opt/pipx/venvs/ansible-core/bin/python
