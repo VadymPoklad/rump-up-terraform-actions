@@ -1,5 +1,5 @@
 - name: Set up Petclinic Spring Boot application on AWS Linux with auto-start
-  hosts: web_springboot
+  hosts: all
   become: true
   vars:
     jar_file_path: "{{ lookup('env', 'JAR_PATH') }}"
