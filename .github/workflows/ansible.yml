@@ -41,7 +41,7 @@ jobs:
         run: |
           SECRET=$(aws secretsmanager get-secret-value --secret-id pet-clinic-ssh-private-key --query SecretString --output text)
           echo "$SECRET" > ansible/ssh_private_key.pem
-          chmod 600 ansible/ssh_private_key.pem
+          chmod 400 ansible/ssh_private_key.pem
 
       - name: Download artifact from GitHub Release
         run: |
