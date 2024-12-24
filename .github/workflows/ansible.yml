@@ -64,6 +64,11 @@ jobs:
           sudo apt install -y ansible python3-pip
           /opt/pipx/venvs/ansible-core/bin/python -m pip install boto3 botocore
 
+      - name: TEST
+        working-directory: ansible
+        run: |
+          ssh -i "ssh_private_key.pem" ec2-user@ec2-52-207-207-92.compute-1.amazonaws.com "echo 'SSH connection successful'"
+
       - name: Run Ansible playbook to deploy
         working-directory: ansible
         run: |
