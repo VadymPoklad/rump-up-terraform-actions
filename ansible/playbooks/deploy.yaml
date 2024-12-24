@@ -24,9 +24,6 @@
       register: java_version
       changed_when: false
 
-    - debug:
-        msg: "Installed Java version: {{ java_version.stdout }}"
-
     - name: Create directory for the application
       file:
         path: "/opt/myapp"
@@ -38,6 +35,13 @@
         src: "{{ jar_file_path }}"
         dest: "/opt/myapp/app.jar"
         mode: '0644'
+    
+    - name: Set environment variables using export
+      shell: |
+        export POSTGRES_PASS={{ db_pass }}
+        export POSTGRES_USER={{ db_user }}
+        export POSTGRES_URL={{ db_url }}
+        export DATABASE_TYPE=postgres
 
     - name: Create systemd unit file for auto-start
       copy:
