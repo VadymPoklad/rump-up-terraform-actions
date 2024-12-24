@@ -1,5 +1,5 @@
 ---
-- name: Deploy JAR to Tomcat and configure environment variables
+- name: Install Tomcat and deploy application
   hosts: all
   become: true
   vars:
@@ -9,34 +9,79 @@
     db_user: "{{ lookup('env', 'DB_USER') }}"
     db_url: "{{ lookup('env', 'DB_URL') }}"
     db_type: "{{ lookup('env', 'DB_TYPE') }}"
+    tomcat_install_dir: "/opt/tomcat"
+    tomcat_version: "9.0.50"
+    tomcat_archive: "apache-tomcat-{{ tomcat_version }}.tar.gz"
+    tomcat_download_url: "https://downloads.apache.org/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_archive }}"
 
   tasks:
-    - name: Ensure Tomcat is installed and running
-      ansible.builtin.yum:
-        name: tomcat
+    - name: Check if Java is installed
+      command: java -version
+      register: java_check
+      ignore_errors: yes
+
+    - name: Install Java if not installed
+      when: java_check.failed
+      apt:
+        name: openjdk-11-jdk
         state: present
-        enablerepo: epel
+      become: true
 
-    - name: Upload JAR file to Tomcat's webapps directory
-      ansible.builtin.copy:
+    - name: Check if Tomcat is already installed
+      stat:
+        path: "{{ tomcat_install_dir }}"
+      register: tomcat_stat
+
+    - name: Download and install Tomcat if not installed
+      when: not tomcat_stat.stat.exists
+      block:
+        - name: Download Tomcat archive
+          get_url:
+            url: "{{ tomcat_download_url }}"
+            dest: "/tmp/{{ tomcat_archive }}"
+
+        - name: Extract Tomcat archive
+          unarchive:
+            src: "/tmp/{{ tomcat_archive }}"
+            dest: "{{ tomcat_install_dir }}"
+            remote_src: yes
+
+        - name: Set correct permissions for Tomcat
+          file:
+            path: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}"
+            owner: root
+            group: root
+            mode: "0755"
+            recurse: yes
+
+    - name: Create webapps directory if not exists
+      file:
+        path: "{{ tomcat_webapps_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Copy JAR file to the server
+      copy:
         src: "{{ jar_file_path }}"
-        dest: "{{ tomcat_webapps_dir }}/petclinic.jar"
-        owner: tomcat
-        group: tomcat
-        mode: '0644'
+        dest: "{{ tomcat_webapps_dir }}/{{ jar_file_path | basename }}"
+        owner: root
+        group: root
+        mode: "0644"
 
-    - name: Set environment variables for Tomcat
-      ansible.builtin.lineinfile:
-        path: /opt/tomcat/bin/setenv.sh
-        line: "{{ item }}"
-        create: yes
-      loop:
-        - "export DB_PASS={{ db_pass }}"
-        - "export DB_USER={{ db_user }}"
-        - "export DB_URL={{ db_url }}"
-        - "export DB_TYPE={{ db_type }}"
+    - name: Create environment variables file
+      copy:
+        content: |
+          export POSTGRES_PASS={{ db_pass }}
+          export POSTGRES_USER={{ db_user }}
+          export POSTGRES_URL={{ db_url }}
+          export DB_TYPE=postgres
+        dest: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}/bin/setenv.sh"
+        mode: "0755"
 
-    - name: Restart Tomcat service to apply changes
-      ansible.builtin.systemd:
-        name: tomcat
-        state: restarted
+    - name: Start Tomcat
+      shell: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}/bin/startup.sh"
+      args:
+        chdir: "{{ tomcat_install_dir }}/apache-tomcat-{{ tomcat_version }}/bin"
+      become: true

@@ -29,12 +29,11 @@ jobs:
           DB_USER=$(echo $SECRET | jq -r '.DB_USER')
           DB_PASS=$(echo $SECRET | jq -r '.DB_PASS')
           DB_URL=$(echo $SECRET | jq -r '.DB_URL')
-          DB_TYPE='postgres'
 
           echo "DB_USER=${DB_USER}" >> $GITHUB_ENV
           echo "DB_PASS=${DB_PASS}" >> $GITHUB_ENV
           echo "DB_URL=${DB_URL}" >> $GITHUB_ENV
-          echo "DB_TYPE=${DB_TYPE}" >> $GITHUB_ENV
+
 
       - name: Retrieve SSH private key from AWS Secrets Manager
         id: ssh_secret
@@ -63,6 +62,8 @@ jobs:
           sudo apt update
           sudo apt install -y python3-pip ansible
           pip3 install boto3 botocore
+          pip3 show boto3 botocore
+
 
       - name: Run Ansible playbook to deploy
         working-directory: ansible
