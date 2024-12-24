@@ -8,8 +8,10 @@ resource "tls_private_key" "example" {
 }
 
 resource "aws_secretsmanager_secret" "ssh_private_key" {
-  name        = "pet-clinic-ssh-private-key"
+  name        = "web-servers-ssh-private-key"
   description = "Private SSH key for EC2 access"
+
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "ssh_private_key_version" {

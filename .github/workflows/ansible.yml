@@ -39,7 +39,7 @@ jobs:
       - name: Retrieve SSH private key from AWS Secrets Manager
         id: ssh_secret
         run: |
-          SECRET=$(aws secretsmanager get-secret-value --secret-id pet-clinic-ssh-private-key --query SecretString --output text)
+          SECRET=$(aws secretsmanager get-secret-value --secret-id web-servers-ssh-private-key --query SecretString --output text)
           echo "$SECRET" > ansible/ssh_private_key.pem
           chmod 400 ansible/ssh_private_key.pem
 
