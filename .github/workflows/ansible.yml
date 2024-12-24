@@ -74,5 +74,4 @@ jobs:
           DB_USER: ${{ env.DB_USER }}
           DB_PASS: ${{ env.DB_PASS }}
           DB_URL: ${{ env.DB_URL }}
-          DB_TYPE: postgres
           ANSIBLE_PRIVATE_KEY_FILE: ssh_private_key.pem
