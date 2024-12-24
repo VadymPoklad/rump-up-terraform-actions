@@ -12,4 +12,3 @@ keyed_groups:
     prefix: "role_"
   - key: "tag:Name"
     prefix: "name_"
-ansible_user: ec2_user

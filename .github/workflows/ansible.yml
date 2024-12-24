@@ -61,7 +61,8 @@ jobs:
       - name: Install Ansible and dependencies for AWS inventory
         run: |
           sudo apt update
-          sudo apt install -y ansible python3-pip
+          sudo apt install -y python3-pip
+          sudo pip3 install ansible==2.3.0
           /opt/pipx/venvs/ansible-core/bin/python -m pip install boto3 botocore
 
       - name: Run Ansible playbook to deploy
