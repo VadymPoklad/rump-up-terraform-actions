@@ -59,11 +59,23 @@ resource "aws_instance" "web_server" {
   iam_instance_profile       = aws_iam_instance_profile.ec2_role_profile.name
   vpc_security_group_ids     = [aws_security_group.ec2_sg.id]
   
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo apt update -y
+              sudo apt upgrade -y
+              sudo apt install -y openssh-server openssl
+              ssh -V
+              openssl version
+              sudo apt install -y openssh-server openssl
+              sudo systemctl restart ssh
+            EOF
+
   tags = {
     Name = "web-server-${count.index + 1}"
     Role = "WebServer"
   }
 }
+
 
 resource "aws_iam_role" "ec2_role" {
   name = "ec2-role"
