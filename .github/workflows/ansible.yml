@@ -68,7 +68,7 @@ jobs:
         working-directory: ansible
         run: |
           ansible-inventory -i inventory/aws_ec2.yaml --list
-          ansible-playbook -i inventory/aws_ec2.yaml playbooks/deploy.yaml -vvv
+          ansible-playbook -i inventory/aws_ec2.yaml playbooks/deploy.yaml
         env:
           DB_USER: ${{ env.DB_USER }}
           DB_PASS: ${{ env.DB_PASS }}
