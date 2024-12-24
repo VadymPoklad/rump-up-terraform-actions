@@ -1,6 +1,6 @@
 ---
 - name: Set up Spring Boot application on AWS Linux with auto-start
-  hosts: aws_servers
+  hosts: web_springboot
   become: true
   vars:
     jar_file_path: "{{ lookup('env', 'JAR_PATH') }}"
