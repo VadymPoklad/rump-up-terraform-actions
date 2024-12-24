@@ -1,14 +1,8 @@
-plugin: amazon.aws.aws_ec2
-aws_access_key: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
-aws_secret_key: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
-regions:
-  - us-east-1
-filters:
-  "tag:Role": "WebServer"
-hostnames:
-  - dns-name
-keyed_groups:
-  - key: "tag:Role"
-    prefix: "role_"
-  - key: "tag:Name"
-    prefix: "name_"
+all:
+  hosts:
+    ec2-52-207-207-92.compute-1.amazonaws.com:
+      ansible_ssh_private_key_file: ./ssh_private_key.pem
+      ansible_user: ec2-user
+    ec2-18-210-6-117.compute-1.amazonaws.com:
+      ansible_ssh_private_key_file: ./ssh_private_key.pem
+      ansible_user: ec2-user
