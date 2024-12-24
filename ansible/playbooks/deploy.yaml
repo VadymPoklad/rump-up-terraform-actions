@@ -14,8 +14,7 @@
     tomcat_archive: "apache-tomcat-{{ tomcat_version }}.tar.gz"
     tomcat_download_url: "https://downloads.apache.org/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_archive }}"
 
-  tasks:
-    - name: Install Java (OpenJDK 17) on Amazon Linux 2023
+    - name: Install Java
       yum:
         name: java-17-openjdk
         state: present
