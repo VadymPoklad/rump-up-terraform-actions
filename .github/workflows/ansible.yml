@@ -63,6 +63,8 @@ jobs:
           sudo apt install -y python3-pip ansible
           pip3 install boto3 botocore
           pip3 show boto3 botocore
+        env:
+          ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3
 
 
       - name: Run Ansible playbook to deploy
@@ -75,3 +77,4 @@ jobs:
           DB_PASS: ${{ env.DB_PASS }}
           DB_URL: ${{ env.DB_URL }}
           ANSIBLE_PRIVATE_KEY_FILE: ssh_private_key.pem
+          ANSIBLE_PYTHON_INTERPRETER: /usr/bin/python3
