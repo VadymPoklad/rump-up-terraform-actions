@@ -16,8 +16,8 @@
 
   tasks:
     - name: Install Java (OpenJDK 17) on Amazon Linux 2023
-      amazon.aws.yum:
-        name: java-17-openjdk-devel
+      yum:
+        name: java-17-openjdk
         state: present
 
     - name: Check if Tomcat is already installed
