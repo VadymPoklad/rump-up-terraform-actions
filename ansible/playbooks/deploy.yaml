@@ -1,5 +1,4 @@
----
-- name: Set up Spring Boot application on AWS Linux with auto-start
+- name: Set up Petclinic Spring Boot application on AWS Linux with auto-start
   hosts: web_springboot
   become: true
   vars:
@@ -24,47 +23,46 @@
       register: java_version
       changed_when: false
 
-    - name: Create directory for the application
+    - name: Create directory for Petclinic application
       file:
-        path: "/opt/myapp"
+        path: "/opt/petclinic"
         state: directory
         mode: '0755'
 
     - name: Copy .jar file from host to server
       copy:
         src: "{{ jar_file_path }}"
-        dest: "/opt/myapp/app.jar"
+        dest: "/opt/petclinic/petclinic.jar"
         mode: '0644'
-    
-    - name: Set environment variables using export
-      shell: |
-        export POSTGRES_PASS={{ db_pass }}
-        export POSTGRES_USER={{ db_user }}
-        export POSTGRES_URL={{ db_url }}
-        export DATABASE_TYPE=postgres
+
+    - name: Create environment file for systemd
+      copy:
+        dest: "/etc/default/petclinic"
+        content: |
+          POSTGRES_PASS={{ db_pass }}
+          POSTGRES_USER={{ db_user }}
+          POSTGRES_URL={{ db_url }}
+          DATABASE_TYPE=postgres
 
     - name: Create systemd unit file for auto-start
       copy:
-        dest: "/etc/systemd/system/springboot-app.service"
+        dest: "/etc/systemd/system/petclinic.service"
         content: |
           [Unit]
-          Description=Spring Boot Application
+          Description=Petclinic Spring Boot Application
           After=network.target
 
           [Service]
           User=ec2-user
-          WorkingDirectory=/opt/myapp
-          ExecStart=/usr/bin/java -jar /opt/myapp/app.jar
-          Environment="POSTGRES_PASS={{ db_pass }}"
-          Environment="POSTGRES_USER={{ db_user }}"
-          Environment="POSTGRES_URL={{ db_url }}"
-          Environment="DATABASE_TYPE=postgres"
+          WorkingDirectory=/opt/petclinic
+          ExecStart=/usr/bin/java -jar /opt/petclinic/petclinic.jar
+          EnvironmentFile=/etc/default/petclinic 
           SuccessExitStatus=143
           Restart=always
           RestartSec=10
           StandardOutput=syslog
           StandardError=syslog
-          SyslogIdentifier=springboot-app
+          SyslogIdentifier=petclinic
 
           [Install]
           WantedBy=multi-user.target
@@ -72,17 +70,17 @@
     - name: Reload systemd to apply new services
       command: systemctl daemon-reload
 
-    - name: Enable and start Spring Boot service
+    - name: Enable and start Petclinic service
       systemd:
-        name: springboot-app
+        name: petclinic
         enabled: yes
         state: started
 
-    - name: Check the status of Spring Boot service
+    - name: Check the status of Petclinic service
       systemd:
-        name: springboot-app
+        name: petclinic
         state: started
-      register: spring_boot_status
+      register: petclinic_status
 
     - debug:
-        msg: "Spring Boot service status: {{ spring_boot_status.status }}"
+        msg: "Petclinic service status: {{ petclinic_status.status }}"

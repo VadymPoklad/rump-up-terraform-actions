@@ -133,14 +133,15 @@ resource "aws_lb_listener" "http_listener" {
   protocol          = "HTTP"
 
   default_action {
-    type             = "fixed-response"
-    fixed_response {
-      status_code = 200
-      content_type = "text/plain"
-      message_body = "OK"
+    type = "forward"
+    forward {
+      target_group {
+        arn = aws_lb_target_group.target_group.arn
+      }
     }
   }
 }
+
 
 resource "aws_lb_target_group_attachment" "tg_attachment" {
   count               = length(var.subnet_ids)
