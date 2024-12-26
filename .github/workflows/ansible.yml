@@ -8,7 +8,25 @@ on:
         required: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies for linting
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip
+          pip3 install ansible-lint
+
+      - name: Run ansible-lint on playbook
+        run: |
+          ansible-lint ansible/playbooks/deploy.yaml
+
   ansible:
+    needs: lint  
     runs-on: ubuntu-latest
 
     steps:
