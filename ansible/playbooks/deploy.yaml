@@ -72,7 +72,7 @@
 
     - name: Reload systemd to apply new services
       ansible.builtin.systemd:
-        daemon_reload: yes
+        daemon_reload: true
 
     - name: Enable and start Petclinic service
       ansible.builtin.systemd:
