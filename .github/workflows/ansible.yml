@@ -1,4 +1,4 @@
-name: Ansible
+name: Ansible Deployment
 
 on:
   workflow_dispatch:
@@ -10,6 +10,7 @@ on:
 jobs:
   ansible:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -22,19 +23,12 @@ jobs:
           aws-region: us-east-1  
 
       - name: Retrieve DB secrets from AWS Secrets Manager
-        id: secrets
+        id: db_secrets
         run: |
           SECRET=$(aws secretsmanager get-secret-value --secret-id SPRING_PETCLINIC_DB --query SecretString --output text)
-          
-          DB_USER=$(echo $SECRET | jq -r '.DB_USER')
-          DB_PASS=$(echo $SECRET | jq -r '.DB_PASS')
-          DB_URL=$(echo $SECRET | jq -r '.DB_URL')
-
-      - name: Test
-        run: |
-          echo "DB_USER=${DB_USER}"
-          echo "DB_PASS=${DB_PASS}"
-          echo "DB_URL=${DB_URL}"
+          echo "DB_USER=$(echo $SECRET | jq -r '.DB_USER')" >> $GITHUB_ENV
+          echo "DB_PASS=$(echo $SECRET | jq -r '.DB_PASS')" >> $GITHUB_ENV
+          echo "DB_URL=$(echo $SECRET | jq -r '.DB_URL')" >> $GITHUB_ENV
 
       - name: Retrieve SSH private key from AWS Secrets Manager
         id: ssh_secret
@@ -48,9 +42,7 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
           RELEASE_TAG=${{ github.event.inputs.release_tag }}
           gh release download $RELEASE_TAG --dir /opt
-          
           JAR_FILE=$(find /opt -name "*.jar" -print -quit)
-
           if [ -n "$JAR_FILE" ]; then
             echo "JAR_PATH=$JAR_FILE" >> $GITHUB_ENV
           else
@@ -58,13 +50,13 @@ jobs:
             exit 1
           fi
 
-      - name: Install Ansible and dependencies for AWS inventory
+      - name: Install Ansible and dependencies
         run: |
           sudo apt update
           sudo apt install -y python3-pip ansible
           python3 -m pip install ansible-lint
-          /opt/pipx/venvs/ansible-core/bin/python -m pip install boto3 botocore ansible-lint
-      
+          python3 -m pip install boto3 botocore
+
       - name: Validate Ansible playbook with ansible-lint
         working-directory: ansible
         run: |
