@@ -9,12 +9,12 @@
 
   tasks:
     - name: Update system
-      ansible.builtin.yum:
+      ansible.builtin.dnf:
         name: "*"
         state: present
 
     - name: Install Amazon Corretto 17
-      ansible.builtin.yum:
+      ansible.builtin.dnf:
         name: java-17-amazon-corretto-headless
         state: present
 
@@ -44,6 +44,7 @@
           POSTGRES_USER={{ db_user }}
           POSTGRES_URL={{ db_url }}
           DATABASE_TYPE=postgres
+        mode: '0600'
 
     - name: Create systemd unit file for auto-start
       ansible.builtin.copy:
@@ -67,10 +68,11 @@
 
           [Install]
           WantedBy=multi-user.target
+        mode: '0644'
 
     - name: Reload systemd to apply new services
-      ansible.builtin.command:
-        cmd: systemctl daemon-reload
+      ansible.builtin.systemd:
+        daemon_reload: yes
 
     - name: Enable and start Petclinic service
       ansible.builtin.systemd:
@@ -84,5 +86,7 @@
         state: started
       register: petclinic_status
 
-    - ansible.builtin.debug:
+    - name: Display Petclinic service status
+      ansible.builtin.debug:
         msg: "Petclinic service status: {{ petclinic_status.status }}"
+
