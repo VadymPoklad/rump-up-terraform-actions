@@ -8,11 +8,6 @@
     db_url: "{{ lookup('env', 'DB_URL') }}"
 
   tasks:
-    - name: Update system
-      ansible.builtin.dnf:
-        name: "*"
-        state: present
-
     - name: Install Amazon Corretto 17
       ansible.builtin.dnf:
         name: java-17-amazon-corretto-headless
