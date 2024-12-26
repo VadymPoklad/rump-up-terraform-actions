@@ -9,34 +9,35 @@
 
   tasks:
     - name: Update system
-      yum:
+      ansible.builtin.yum:
         name: "*"
-        state: latest
+        state: present
 
     - name: Install Amazon Corretto 17
-      yum:
+      ansible.builtin.yum:
         name: java-17-amazon-corretto-headless
         state: present
 
     - name: Check Java version
-      command: java -version
+      ansible.builtin.command:
+        cmd: java -version
       register: java_version
       changed_when: false
 
     - name: Create directory for Petclinic application
-      file:
+      ansible.builtin.file:
         path: "/opt/petclinic"
         state: directory
         mode: '0755'
 
     - name: Copy .jar file from host to server
-      copy:
+      ansible.builtin.copy:
         src: "{{ jar_file_path }}"
         dest: "/opt/petclinic/petclinic.jar"
         mode: '0644'
 
     - name: Create environment file for systemd
-      copy:
+      ansible.builtin.copy:
         dest: "/etc/default/petclinic"
         content: |
           POSTGRES_PASS={{ db_pass }}
@@ -45,7 +46,7 @@
           DATABASE_TYPE=postgres
 
     - name: Create systemd unit file for auto-start
-      copy:
+      ansible.builtin.copy:
         dest: "/etc/systemd/system/petclinic.service"
         content: |
           [Unit]
@@ -68,19 +69,20 @@
           WantedBy=multi-user.target
 
     - name: Reload systemd to apply new services
-      command: systemctl daemon-reload
+      ansible.builtin.command:
+        cmd: systemctl daemon-reload
 
     - name: Enable and start Petclinic service
-      systemd:
+      ansible.builtin.systemd:
         name: petclinic
         enabled: yes
         state: started
 
     - name: Check the status of Petclinic service
-      systemd:
+      ansible.builtin.systemd:
         name: petclinic
         state: started
       register: petclinic_status
 
-    - debug:
+    - ansible.builtin.debug:
         msg: "Petclinic service status: {{ petclinic_status.status }}"
