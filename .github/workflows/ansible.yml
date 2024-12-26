@@ -30,6 +30,12 @@ jobs:
           DB_PASS=$(echo $SECRET | jq -r '.DB_PASS')
           DB_URL=$(echo $SECRET | jq -r '.DB_URL')
 
+      - name: Test
+        run: |
+          echo "DB_USER=${DB_USER}"
+          echo "DB_PASS=${DB_PASS}"
+          echo "DB_URL=${DB_URL}"
+
       - name: Retrieve SSH private key from AWS Secrets Manager
         id: ssh_secret
         run: |
@@ -56,17 +62,13 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip ansible
+          python3 -m pip install ansible-lint
           /opt/pipx/venvs/ansible-core/bin/python -m pip install boto3 botocore ansible-lint
       
       - name: Validate Ansible playbook with ansible-lint
+        working-directory: ansible
         run: |
-          ansible-lint ansible/playbooks/deploy.yaml
-
-      - name: Test
-        run: |
-          echo "DB_USER=${DB_USER}"
-          echo "DB_PASS=${DB_PASS}"
-          echo "DB_URL=${DB_URL}"
+          ansible-lint playbooks/deploy.yaml
 
       - name: Run Ansible playbook to deploy
         working-directory: ansible
