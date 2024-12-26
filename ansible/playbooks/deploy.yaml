@@ -58,7 +58,7 @@
           User=ec2-user
           WorkingDirectory=/opt/petclinic
           ExecStart=/usr/bin/java -jar /opt/petclinic/petclinic.jar
-          EnvironmentFile=/etc/default/petclinic 
+          EnvironmentFile=/etc/default/petclinic
           SuccessExitStatus=143
           Restart=always
           RestartSec=10
@@ -77,7 +77,7 @@
     - name: Enable and start Petclinic service
       ansible.builtin.systemd:
         name: petclinic
-        enabled: yes
+        enabled: true
         state: started
 
     - name: Check the status of Petclinic service
@@ -89,4 +89,3 @@
     - name: Display Petclinic service status
       ansible.builtin.debug:
         msg: "Petclinic service status: {{ petclinic_status.status }}"
-
