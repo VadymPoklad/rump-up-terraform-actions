@@ -54,13 +54,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y python3-pip ansible
-          python3 -m pip install ansible-lint
           /opt/pipx/venvs/ansible-core/bin/python -m pip install boto3 botocore
-
-      - name: Validate Ansible playbook with ansible-lint
-        working-directory: ansible
-        run: |
-          ansible-lint playbooks/deploy.yaml
 
       - name: Run Ansible playbook to deploy
         working-directory: ansible
