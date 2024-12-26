@@ -89,3 +89,5 @@
     - name: Display Petclinic service status
       ansible.builtin.debug:
         msg: "Petclinic service status: {{ petclinic_status.status }}"
+
+# Ensure there's an extra newline at the end of the file
